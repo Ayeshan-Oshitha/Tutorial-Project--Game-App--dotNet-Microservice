@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Play.Catalog.Entities;
+using Play.Catalog.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Play.Catalog.Controllers
 {
@@ -10,59 +13,76 @@ namespace Play.Catalog.Controllers
     [ApiController]
     public class ItemsController : ControllerBase
     {
-        private static readonly List<ItemDto> items = new()
-        {
-            new ItemDto(Guid.NewGuid(), "Potion", "Restore a small amount of HP", 5, DateTimeOffset.Now),
-            new ItemDto(Guid.NewGuid(), "Antidote", "Curse poison", 7, DateTimeOffset.Now),
-            new ItemDto(Guid.NewGuid(), "Bronze sword", "Deals a small amount of damage", 7, DateTimeOffset.Now)
-        };
+        private readonly ItemRepository _itemRepository = new();
 
         [HttpGet]
-        public IEnumerable<ItemDto> Get()
+        public async Task<IEnumerable<ItemDto>> GetAsync()
         {
+            var items = (await _itemRepository.GetAllAsync()).Select(x => x.AsDto());
             return items;
         }
 
         [HttpGet("{id}")]
-        public ItemDto GetById(Guid id)
+        public async Task<ActionResult<ItemDto>> GetByIdAsync(Guid id)
         {
-            var item = items.Where(x => x.Id == id).FirstOrDefault();
-            return item;
+            var item = await _itemRepository.GetAsync(id);
+
+            if(item == null)
+            {
+                return NotFound();
+            }
+
+            return item.AsDto();
         }
 
         [HttpPost]
-        public ActionResult<ItemDto> Post(CreateItemDto createItemDto)
+        public async Task<ActionResult<ItemDto>> PostAsync(CreateItemDto createItemDto)
         {
-            var item = new ItemDto(Guid.NewGuid(), createItemDto.Name , createItemDto.Description, createItemDto.Price, DateTimeOffset.Now);
-            items.Add(item);
-            return CreatedAtAction(nameof(GetById), new {id = item.Id}, item);
+            var item = new Item
+            {
+                Name = createItemDto.Name,
+                Description = createItemDto.Description,
+                Price = createItemDto.Price,
+                CreatedDate = DateTimeOffset.Now,
+            };
+
+            await _itemRepository.CreateAsync(item);
+
+            return CreatedAtAction(nameof(GetByIdAsync), new {id = item.Id}, item);
         }
 
         [HttpPut("{id}")]
-        public IActionResult Put(Guid id, UpdateItemDto updateItemDto)
+        public async  Task<IActionResult> PutAsync(Guid id, UpdateItemDto updateItemDto)
         {
-            var existingItem = items.Where(x => x.Id == id).SingleOrDefault();
+            var exisitingItem = await _itemRepository.GetAsync(id);
 
-            var updatedItem = existingItem with
+            if(exisitingItem == null)
             {
-                Name = updateItemDto.Name,
-                Description = updateItemDto.Description,
-                Price = updateItemDto.Price
-            };
+                return NotFound();
+            }
 
-            var index = items.FindIndex(existingItem => existingItem.Id == id);
-            items[index] = updatedItem;
+            exisitingItem.Name = updateItemDto.Name;
+            exisitingItem.Description = updateItemDto.Description;
+            exisitingItem.Price = updateItemDto.Price;
 
-            return NoContent();
+            await _itemRepository.UpdateAsync(exisitingItem);
+
+            return Ok();
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(Guid id)
+        public async  Task<IActionResult> Delete(Guid id)
         {
-            var index = items.FindIndex(existingItem => existingItem.Id == id);
-            items.RemoveAt(index);
+            var exisitingItem = await _itemRepository.GetAsync(id);
 
-            return NoContent();
+            if (exisitingItem == null)
+            {
+                return NotFound();
+            }
+
+            await _itemRepository.RemoveAsync(id);
+
+            return Ok();
         }
     }
 }
