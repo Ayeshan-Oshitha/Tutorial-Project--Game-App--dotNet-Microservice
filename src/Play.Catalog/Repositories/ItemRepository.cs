@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Play.Catalog.Repositories
 {
-    public class ItemRepository
+
+    public class ItemRepository : IItemRepository
     {
         private const string collectionName = "items";
 
@@ -14,12 +15,8 @@ namespace Play.Catalog.Repositories
 
         private readonly FilterDefinitionBuilder<Item> filterBuilder = Builders<Item>.Filter;
 
-        public ItemRepository()
+        public ItemRepository(IMongoDatabase database)
         {
-            var mongoClient = new MongoClient("mongodb://localhost:27017");
-
-            var database = mongoClient.GetDatabase("Catalog");
-
             _dbCollection = database.GetCollection<Item>(collectionName);
         }
 
