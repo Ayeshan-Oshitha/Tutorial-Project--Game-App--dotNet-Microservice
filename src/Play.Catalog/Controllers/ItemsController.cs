@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Play.Catalog.Entities;
-using Play.Catalog.Repositories;
+using Play.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
