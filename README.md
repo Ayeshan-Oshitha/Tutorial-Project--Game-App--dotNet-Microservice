@@ -62,6 +62,8 @@ Visual Studio will:
 
 add above code to docker-compose.yml file
 
-To Run - `docker-compose up -d`
+Then use terminal (view -> Terminal) to run the docker image
 
-To stop the container: - `docker-compose down`
+- To Run - `docker-compose up -d`
+
+- To stop the container: - `docker-compose down`
