@@ -30,7 +30,7 @@ namespace Play.Catalog.Controllers
             Console.WriteLine($"Request {requestCounter} : Starting...");
 
             // This code intentionally simulates a timeout and failure scenario
-            if ( requestCounter <= 3 )
+            if ( requestCounter <= 4 )
             {
                 Console.WriteLine($"Request {requestCounter} : Delaying...");
                 await Task.Delay(TimeSpan.FromSeconds(10));
