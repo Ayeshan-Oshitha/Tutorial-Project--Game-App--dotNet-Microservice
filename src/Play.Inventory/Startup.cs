@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -14,6 +15,7 @@ using Microsoft.OpenApi.Models;
 using Play.Common.MongoDB;
 using Play.Inventory.Client;
 using Play.Inventory.Entities;
+using Polly;
 
 namespace Play.Inventory
 {
@@ -35,7 +37,9 @@ namespace Play.Inventory
             services.AddHttpClient<CatalogClient>(client =>
             {
                 client.BaseAddress = new Uri("https://localhost:5001/");
-            });
+            })
+                // Apply a timeout policy: if a request takes longer than 2 seconds, it will fail
+                .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(2));
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
