@@ -59,6 +59,27 @@ namespace Play.Inventory
                         .LogWarning($"Delaying for {timespan.TotalSeconds} seconds, then making retry {retryAttempt}");
                     }
                 ))
+                // Sets up a circuit breaker policy:
+                // - Breaks the circuit after 3 consecutive failures
+                // - Keeps it open for 20 seconds before attempting to reset
+                .AddTransientHttpErrorPolicy(builder => builder.Or<TimeoutRejectedException>().CircuitBreakerAsync(
+                    3,
+                    TimeSpan.FromSeconds(20),
+                    // This action runs when the circuit is broken
+                    onBreak: (outcome, timespan) =>
+                    {
+                        var serviceProvider = services.BuildServiceProvider();
+                        serviceProvider.GetService<ILogger<CatalogClient>>()?
+                            .LogWarning($"Opening the circuit for {timespan.TotalSeconds} seconds...");
+                    },
+                    // This action runs when the circuit is reset (closed)
+                    onReset: () =>
+                    {
+                        var serviceProvider = services.BuildServiceProvider();
+                        serviceProvider.GetService<ILogger<CatalogClient>>()?
+                            .LogWarning($"Closing the circuit...");
+                    }
+                ))
                 // Apply a timeout policy: if a request takes longer than 2 seconds, it will fail
                 .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(2));
 
