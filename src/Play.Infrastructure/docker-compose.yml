@@ -5,7 +5,8 @@ services:
     image: mongo
     container_name: mongo
     ports:
-      - "27017:27017"
+      - "27014:27021"
+    command: ["mongod", "--port", "27021"]
     volumes:
       - mongodbdata:/data/db
 

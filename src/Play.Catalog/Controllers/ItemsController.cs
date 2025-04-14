@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Play.Catalog.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Catalog")]
     [ApiController]
     public class ItemsController : ControllerBase
     {
