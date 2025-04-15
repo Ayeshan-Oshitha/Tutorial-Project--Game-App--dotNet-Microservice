@@ -9,6 +9,17 @@ services:
     command: ["mongod", "--port", "27021"]
     volumes:
       - mongodbdata:/data/db
+ 
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # RabbitMQ default port for messaging
+      - "15672:15672"  # Management UI (web interface) port
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    hostname: rabbitmq
 
 volumes:
   mongodbdata:
+  rabbitmqdata:
