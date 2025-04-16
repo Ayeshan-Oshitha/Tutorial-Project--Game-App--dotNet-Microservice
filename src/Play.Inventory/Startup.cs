@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Play.Common.MassTransit;
 using Play.Common.MongoDB;
 using Play.Inventory.Client;
 using Play.Inventory.Entities;
@@ -34,7 +35,44 @@ namespace Play.Inventory
         {
             services.AddMongo();
             services.AddMongoRepository<InventoryItem>("inventoryItems");
+            services.AddMongoRepository<CatalogItem>("catalogItems");
+            services.AddMassTransitWithRabbitMq();
+            
+            // Move the Synchronous communication code for seperate method
+            AddCatalogClient(services);
 
+            services.AddControllers();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Play.Inventory", Version = "v1" });
+            });
+        } 
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Play.Inventory v1"));
+            }
+
+            app.UseHttpsRedirection();
+
+            app.UseRouting();
+
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
+        }
+
+
+        private static void AddCatalogClient(IServiceCollection services)
+        {
             Random jitterer = new Random();
 
             services.AddHttpClient<CatalogClient>(client =>
@@ -48,8 +86,8 @@ namespace Play.Inventory
                 // - Log each retry attempt with the delay duration
                 .AddTransientHttpErrorPolicy(builder => builder.Or<TimeoutRejectedException>().WaitAndRetryAsync(
                     retryCount: 5,
-                    sleepDurationProvider : retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))
-                                                                   + TimeSpan.FromMilliseconds(jitterer.Next(0, 1000)) ,
+                    sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))
+                                                                   + TimeSpan.FromMilliseconds(jitterer.Next(0, 1000)),
                     onRetry: (outcome, timespan, retryAttempt) =>
                     {
                         // Build a service provider to resolve the logger service
@@ -82,34 +120,6 @@ namespace Play.Inventory
                 ))
                 // Apply a timeout policy: if a request takes longer than 2 seconds, it will fail
                 .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(2));
-
-            services.AddControllers();
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Play.Inventory", Version = "v1" });
-            });
-        }
-
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Play.Inventory v1"));
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
         }
     }
 }
