@@ -1,3 +1,44 @@
+# 🎮 .NET Microservices Project – Game Play Store
+
+This is a simple microservices-based project built using **.NET**, inspired by a tutorial series from [Julio Casal](https://www.youtube.com/@juliocasal). The project simulates a backend system for a Game Play Store.
+
+## 🧩 Microservices Included
+
+- **Catalog Service** – Handles game catalog data.
+- **Inventory Service** – Manages stock levels and availability of games.
+
+## 🧠 What I Learned
+
+### 🔁 Communication Between Services
+- **Synchronous Communication**: Implemented using `HttpClient`.
+- **Asynchronous Communication**: Implemented using `RabbitMQ` and `MassTransit`.
+
+### 💾 Data & Storage
+- Used **MongoDB** for data persistence in both microservices.
+
+### 🐳 Containerization
+- Used **Docker** and `docker-compose` to:
+  - Run MongoDB
+  - Run RabbitMQ
+  - Manage service containers for development and testing
+
+### ♻️ Shared Libraries
+- Created **reusable NuGet packages** to share common code (like DTOs and settings) across microservices.
+
+## 🛠️ Technologies Used
+
+- [.NET 5](https://dotnet.microsoft.com/)
+- [MongoDB](https://www.mongodb.com/)
+- [RabbitMQ](https://www.rabbitmq.com/)
+- [MassTransit](https://masstransit-project.com/)
+- [Docker](https://www.docker.com/)
+
+
+
+
+------------------------------------
+
+
 # To run docker through VSCode
 
 `docker run -d --rm --name mongo123 -p 27017:27017 -v mongodbdata:/data/db`
